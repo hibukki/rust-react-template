@@ -1,14 +1,17 @@
 use crate::config::Config;
 use db::DbPool;
 use shared::types::WsEvent;
-use std::sync::Arc;
-use tokio::sync::broadcast;
+use std::{collections::HashMap, sync::Arc};
+use tokio::sync::{broadcast, RwLock};
+
+pub type Sessions = Arc<RwLock<HashMap<String, i64>>>;
 
 #[derive(Clone)]
 pub struct AppState {
     pub config: Arc<Config>,
     pub db: DbPool,
     pub events_tx: broadcast::Sender<WsEvent>,
+    pub sessions: Sessions,
 }
 
 impl AppState {
@@ -18,6 +21,7 @@ impl AppState {
             config: Arc::new(config),
             db,
             events_tx,
+            sessions: Arc::new(RwLock::new(HashMap::new())),
         }
     }
 
