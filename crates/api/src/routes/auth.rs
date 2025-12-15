@@ -59,8 +59,10 @@ async fn register(
             _ => AppError::Internal(e.into()),
         })?;
 
-    // Create profile
-    let profile = db::create_profile(&state.db, user_id, &req.display_name)
+    // Create profile (ProfileService handles broadcast automatically)
+    let profile = state
+        .profile_service
+        .create_profile(user_id, &req.display_name)
         .await
         .map_err(|e| AppError::Internal(e.into()))?;
 
@@ -77,11 +79,6 @@ async fn register(
     cookie.set_path("/");
     cookie.set_http_only(true);
     cookies.add(cookie);
-
-    // Broadcast event
-    let _ = state
-        .events_tx
-        .send(shared::types::WsEvent::Profile(profile.clone()));
 
     Ok(Json(AuthResponse {
         user_id,
@@ -110,7 +107,9 @@ async fn login(
         .map_err(|_| AppError::Unauthorized)?;
 
     // Get profile
-    let profile = db::get_profile_by_user_id(&state.db, user.id)
+    let profile = state
+        .profile_service
+        .get_profile_by_user_id(user.id)
         .await
         .map_err(|e| AppError::Internal(e.into()))?
         .ok_or_else(|| AppError::Internal(anyhow::anyhow!("Profile not found")))?;

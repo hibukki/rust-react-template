@@ -15,7 +15,9 @@ pub fn routes() -> Router<AppState> {
 }
 
 async fn list_profiles(State(state): State<AppState>) -> Result<Json<Vec<Profile>>, AppError> {
-    let profiles = db::list_profiles(&state.db)
+    let profiles = state
+        .profile_service
+        .list_profiles()
         .await
         .map_err(|e| AppError::Internal(e.into()))?;
 
@@ -26,7 +28,9 @@ async fn get_profile(
     State(state): State<AppState>,
     Path(id): Path<i64>,
 ) -> Result<Json<Profile>, AppError> {
-    let profile = db::get_profile_by_id(&state.db, id)
+    let profile = state
+        .profile_service
+        .get_profile_by_id(id)
         .await
         .map_err(|e| AppError::Internal(e.into()))?
         .ok_or_else(|| AppError::NotFound("Profile not found".to_string()))?;
@@ -50,7 +54,9 @@ async fn update_profile(
     let user_id = get_current_user_id(&state, &cookies).await?;
 
     // Get the profile to check ownership
-    let profile = db::get_profile_by_id(&state.db, id)
+    let profile = state
+        .profile_service
+        .get_profile_by_id(id)
         .await
         .map_err(|e| AppError::Internal(e.into()))?
         .ok_or_else(|| AppError::NotFound("Profile not found".to_string()))?;
@@ -60,21 +66,13 @@ async fn update_profile(
         return Err(AppError::Unauthorized);
     }
 
-    // Update profile
-    let updated = db::update_profile(
-        &state.db,
-        id,
-        req.display_name.as_deref(),
-        req.bio.as_deref(),
-    )
-    .await
-    .map_err(|e| AppError::Internal(e.into()))?
-    .ok_or_else(|| AppError::NotFound("Profile not found".to_string()))?;
-
-    // Broadcast update
-    let _ = state
-        .events_tx
-        .send(shared::types::WsEvent::Profile(updated.clone()));
+    // Update profile (ProfileService handles broadcast automatically)
+    let updated = state
+        .profile_service
+        .update_profile(id, req.display_name.as_deref(), req.bio.as_deref())
+        .await
+        .map_err(|e| AppError::Internal(e.into()))?
+        .ok_or_else(|| AppError::NotFound("Profile not found".to_string()))?;
 
     Ok(Json(updated))
 }
