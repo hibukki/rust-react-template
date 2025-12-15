@@ -81,7 +81,7 @@ async fn register(
     // Broadcast event
     let _ = state
         .events_tx
-        .send(shared::types::WsEvent::ProfileCreated(profile.clone()));
+        .send(shared::types::WsEvent::Profile(profile.clone()));
 
     Ok(Json(AuthResponse {
         user_id,

@@ -74,7 +74,7 @@ async fn update_profile(
     // Broadcast update
     let _ = state
         .events_tx
-        .send(shared::types::WsEvent::ProfileUpdated(updated.clone()));
+        .send(shared::types::WsEvent::Profile(updated.clone()));
 
     Ok(Json(updated))
 }

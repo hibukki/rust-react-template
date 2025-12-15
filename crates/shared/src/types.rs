@@ -15,6 +15,5 @@ pub struct Profile {
 #[ts(export, export_to = "../../frontend/src/types/bindings/")]
 #[serde(tag = "type", content = "data")]
 pub enum WsEvent {
-    ProfileUpdated(Profile),
-    ProfileCreated(Profile),
+    Profile(Profile),
 }
