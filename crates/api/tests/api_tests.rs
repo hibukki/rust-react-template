@@ -130,41 +130,7 @@ async fn login_wrong_password() {
     response.assert_status(StatusCode::UNAUTHORIZED);
 }
 
-#[tokio::test]
-async fn list_profiles_empty() {
-    let app = common::TestApp::new().await;
-
-    let response = app.get("/api/profiles").await;
-
-    response.assert_ok();
-    let body: Vec<serde_json::Value> = serde_json::from_str(&response.body).unwrap();
-    assert!(body.is_empty());
-}
-
-#[tokio::test]
-async fn list_profiles_after_register() {
-    let mut app = common::TestApp::new().await;
-
-    // Register a user
-    app.post(
-        "/api/auth/register",
-        json!({
-            "email": "profile@example.com",
-            "password": "password123",
-            "display_name": "Profile User"
-        }),
-    )
-    .await
-    .assert_ok();
-
-    // List profiles
-    let response = app.get("/api/profiles").await;
-
-    response.assert_ok();
-    let body: Vec<serde_json::Value> = serde_json::from_str(&response.body).unwrap();
-    assert_eq!(body.len(), 1);
-    assert_eq!(body[0]["display_name"], "Profile User");
-}
+// REST list_profiles tests removed - profiles now read via WebSocket
 
 #[tokio::test]
 async fn update_own_profile() {
