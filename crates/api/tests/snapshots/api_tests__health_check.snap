@@ -1,0 +1,8 @@
+---
+source: crates/api/tests/api_tests.rs
+expression: response.json()
+---
+{
+  "status": "healthy",
+  "version": "0.1.0"
+}

@@ -26,3 +26,8 @@ tower-cookies.workspace = true
 uuid.workspace = true
 sqlx.workspace = true
 rand.workspace = true
+
+[dev-dependencies]
+tower = { version = "0.5", features = ["util"] }
+http-body-util = "0.1"
+insta = { version = "1", features = ["json"] }
