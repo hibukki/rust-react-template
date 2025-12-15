@@ -1,34 +1,21 @@
-import { useEffect, useState, useCallback } from "react"
-import { api } from "@/api/client"
+import { useState, useCallback } from "react"
 import { useWebSocket } from "@/hooks/useWebSocket"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Profile } from "@/types/bindings"
 
 export function ProfilesPage() {
-  const [profiles, setProfiles] = useState<Profile[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [profiles, setProfiles] = useState<Map<bigint, Profile>>(new Map())
 
-  const handleProfileCreated = useCallback((profile: Profile) => {
-    setProfiles((prev) => [profile, ...prev.filter((p) => p.id !== profile.id)])
-  }, [])
-
-  const handleProfileUpdated = useCallback((profile: Profile) => {
-    setProfiles((prev) => prev.map((p) => (p.id === profile.id ? profile : p)))
+  // Single handler for all profile events (initial state AND updates)
+  const handleProfile = useCallback((profile: Profile) => {
+    setProfiles((prev) => new Map(prev).set(profile.id, profile))
   }, [])
 
   const { isConnected } = useWebSocket({
-    onProfileCreated: handleProfileCreated,
-    onProfileUpdated: handleProfileUpdated,
+    onProfile: handleProfile,
   })
 
-  useEffect(() => {
-    api.profiles
-      .list()
-      .then(setProfiles)
-      .catch((err) => setError((err as Error).message))
-      .finally(() => setLoading(false))
-  }, [])
+  const profileList = Array.from(profiles.values())
 
   return (
     <div className="space-y-6">
@@ -47,13 +34,9 @@ export function ProfilesPage() {
         </div>
       </div>
 
-      {error && (
-        <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
-      )}
-
-      {loading ? (
-        <div className="text-center text-muted-foreground">Loading profiles...</div>
-      ) : profiles.length === 0 ? (
+      {!isConnected && profiles.size === 0 ? (
+        <div className="text-center text-muted-foreground">Connecting...</div>
+      ) : profileList.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
             No profiles yet. Be the first to create one!
@@ -61,7 +44,7 @@ export function ProfilesPage() {
         </Card>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {profiles.map((profile) => (
+          {profileList.map((profile) => (
             <Card key={profile.id.toString()}>
               <CardHeader>
                 <CardTitle className="text-lg">{profile.display_name}</CardTitle>

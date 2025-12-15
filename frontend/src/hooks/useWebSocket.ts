@@ -2,8 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import type { WsEvent, Profile } from "../types/bindings";
 
 interface UseWebSocketOptions {
-  onProfileCreated?: (profile: Profile) => void;
-  onProfileUpdated?: (profile: Profile) => void;
+  onProfile?: (profile: Profile) => void;
   reconnectInterval?: number;
 }
 
@@ -25,16 +24,14 @@ function parseProfile(data: unknown): Profile {
 
 function parseWsEvent(data: unknown): WsEvent {
   const raw = data as { type: string; data: unknown };
-  if (raw.type === "ProfileCreated") {
-    return { type: "ProfileCreated", data: parseProfile(raw.data) };
-  } else if (raw.type === "ProfileUpdated") {
-    return { type: "ProfileUpdated", data: parseProfile(raw.data) };
+  if (raw.type === "Profile") {
+    return { type: "Profile", data: parseProfile(raw.data) };
   }
   throw new Error(`Unknown event type: ${raw.type}`);
 }
 
 export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketReturn {
-  const { onProfileCreated, onProfileUpdated, reconnectInterval = 3000 } = options;
+  const { onProfile, reconnectInterval = 3000 } = options;
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
@@ -58,10 +55,9 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
         const data = JSON.parse(event.data);
         const wsEvent = parseWsEvent(data);
 
-        if (wsEvent.type === "ProfileCreated" && onProfileCreated) {
-          onProfileCreated(wsEvent.data);
-        } else if (wsEvent.type === "ProfileUpdated" && onProfileUpdated) {
-          onProfileUpdated(wsEvent.data);
+        // Single handler for all profile events (initial state and updates)
+        if (wsEvent.type === "Profile" && onProfile) {
+          onProfile(wsEvent.data);
         }
       } catch (e) {
         console.error("Failed to parse WebSocket message:", e);
@@ -76,7 +72,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
       setIsConnected(false);
       wsRef.current = null;
     };
-  }, [onProfileCreated, onProfileUpdated]);
+  }, [onProfile]);
 
   // Handle reconnection separately
   useEffect(() => {
