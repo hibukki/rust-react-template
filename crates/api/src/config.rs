@@ -6,7 +6,8 @@ pub struct Config {
     pub port: u16,
     #[serde(default = "default_host")]
     pub host: String,
-    pub database_url: Option<String>,
+    #[serde(default = "default_database_url")]
+    pub database_url: String,
 }
 
 fn default_port() -> u16 {
@@ -15,6 +16,10 @@ fn default_port() -> u16 {
 
 fn default_host() -> String {
     "0.0.0.0".to_string()
+}
+
+fn default_database_url() -> String {
+    "sqlite:./dev.db".to_string()
 }
 
 impl Config {

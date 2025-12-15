@@ -15,14 +15,23 @@ async fn main() -> anyhow::Result<()> {
         .init();
 
     let config = Config::load()?;
-    let state = AppState::new(config.clone());
+
+    // Initialize database
+    tracing::info!("Connecting to database: {}", config.database_url);
+    let pool = db::pool::create_pool(&config.database_url).await?;
+
+    tracing::info!("Running migrations...");
+    db::pool::run_migrations(&pool).await?;
+    tracing::info!("Migrations complete");
+
+    let state = AppState::new(config.clone(), pool);
 
     let app = routes::router(state)
         .layer(TraceLayer::new_for_http())
         .layer(CorsLayer::permissive());
 
     let addr = SocketAddr::from(([0, 0, 0, 0], config.port));
-    tracing::info!("listening on {}", addr);
+    tracing::info!("Listening on {}", addr);
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
     axum::serve(listener, app).await?;
