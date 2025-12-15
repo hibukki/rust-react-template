@@ -9,6 +9,7 @@ use axum::{
     Router,
 };
 use futures_util::{SinkExt, StreamExt};
+use shared::types::WsEvent;
 
 pub fn routes() -> Router<AppState> {
     Router::new().route("/api/ws", get(ws_handler))
@@ -21,10 +22,27 @@ async fn ws_handler(State(state): State<AppState>, ws: WebSocketUpgrade) -> Resp
 async fn handle_socket(socket: WebSocket, state: AppState) {
     let (mut sender, mut receiver) = socket.split();
 
-    // Subscribe to events
+    // Subscribe to events BEFORE fetching initial state to avoid race conditions
     let mut events_rx = state.subscribe_events();
 
-    // Spawn task to forward events to client
+    // 1. Send ALL current profiles immediately (initial state)
+    let profiles = state.profile_service.list_profiles().await.unwrap_or_default();
+    for profile in profiles {
+        let event = WsEvent::Profile(profile);
+        let json = match serde_json::to_string(&event) {
+            Ok(j) => j,
+            Err(e) => {
+                tracing::error!("Failed to serialize profile: {}", e);
+                continue;
+            }
+        };
+        if sender.send(Message::Text(json.into())).await.is_err() {
+            tracing::debug!("WebSocket closed during initial state");
+            return;
+        }
+    }
+
+    // 2. Forward future updates (same message type as initial state)
     let send_task = tokio::spawn(async move {
         while let Ok(event) = events_rx.recv().await {
             let json = match serde_json::to_string(&event) {
