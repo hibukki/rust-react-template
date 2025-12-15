@@ -26,7 +26,11 @@ async fn handle_socket(socket: WebSocket, state: AppState) {
     let mut events_rx = state.subscribe_events();
 
     // 1. Send ALL current profiles immediately (initial state)
-    let profiles = state.profile_service.list_profiles().await.unwrap_or_default();
+    let profiles = state
+        .profile_service
+        .list_profiles()
+        .await
+        .unwrap_or_default();
     for profile in profiles {
         let event = WsEvent::Profile(profile);
         let json = match serde_json::to_string(&event) {

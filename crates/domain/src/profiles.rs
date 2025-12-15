@@ -46,7 +46,10 @@ impl ProfileService {
     }
 
     /// Get a profile by user ID (no broadcast)
-    pub async fn get_profile_by_user_id(&self, user_id: i64) -> Result<Option<Profile>, sqlx::Error> {
+    pub async fn get_profile_by_user_id(
+        &self,
+        user_id: i64,
+    ) -> Result<Option<Profile>, sqlx::Error> {
         db::get_profile_by_user_id(&self.db, user_id).await
     }
 
