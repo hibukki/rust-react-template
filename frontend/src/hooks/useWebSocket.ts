@@ -39,6 +39,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
   const [error, setError] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const shouldReconnectRef = useRef(true);
 
   const connect = useCallback(() => {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -74,16 +75,30 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
     ws.onclose = () => {
       setIsConnected(false);
       wsRef.current = null;
-
-      // Attempt to reconnect
-      reconnectTimeoutRef.current = setTimeout(connect, reconnectInterval);
     };
-  }, [onProfileCreated, onProfileUpdated, reconnectInterval]);
+  }, [onProfileCreated, onProfileUpdated]);
 
+  // Handle reconnection separately
+  useEffect(() => {
+    if (!isConnected && shouldReconnectRef.current && !wsRef.current) {
+      reconnectTimeoutRef.current = setTimeout(() => {
+        connect();
+      }, reconnectInterval);
+    }
+
+    return () => {
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+    };
+  }, [isConnected, connect, reconnectInterval]);
+
+  // Initial connection
   useEffect(() => {
     connect();
 
     return () => {
+      shouldReconnectRef.current = false;
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }
