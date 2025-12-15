@@ -1,5 +1,5 @@
-mod users;
 mod profiles;
+mod users;
 
-pub use users::*;
 pub use profiles::*;
+pub use users::*;

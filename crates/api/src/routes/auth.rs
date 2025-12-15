@@ -46,7 +46,7 @@ async fn register(
     let salt = SaltString::generate(&mut rand::thread_rng());
     let password_hash = Argon2::default()
         .hash_password(req.password.as_bytes(), &salt)
-        .map_err(|e| AppError::Internal(anyhow::anyhow!("Password hashing failed: {}", e)))?
+        .map_err(|e| AppError::Internal(anyhow::anyhow!("Password hashing failed: {e}")))?
         .to_string();
 
     // Create user
@@ -66,7 +66,11 @@ async fn register(
 
     // Create session
     let session_id = Uuid::new_v4().to_string();
-    state.sessions.write().await.insert(session_id.clone(), user_id);
+    state
+        .sessions
+        .write()
+        .await
+        .insert(session_id.clone(), user_id);
 
     // Set cookie
     let mut cookie = Cookie::new("session_id", session_id);
@@ -75,7 +79,9 @@ async fn register(
     cookies.add(cookie);
 
     // Broadcast event
-    let _ = state.events_tx.send(shared::types::WsEvent::ProfileCreated(profile.clone()));
+    let _ = state
+        .events_tx
+        .send(shared::types::WsEvent::ProfileCreated(profile.clone()));
 
     Ok(Json(AuthResponse {
         user_id,
@@ -97,7 +103,7 @@ async fn login(
 
     // Verify password
     let parsed_hash = PasswordHash::new(&user.password_hash)
-        .map_err(|e| AppError::Internal(anyhow::anyhow!("Invalid password hash: {}", e)))?;
+        .map_err(|e| AppError::Internal(anyhow::anyhow!("Invalid password hash: {e}")))?;
 
     Argon2::default()
         .verify_password(req.password.as_bytes(), &parsed_hash)
@@ -111,7 +117,11 @@ async fn login(
 
     // Create session
     let session_id = Uuid::new_v4().to_string();
-    state.sessions.write().await.insert(session_id.clone(), user.id);
+    state
+        .sessions
+        .write()
+        .await
+        .insert(session_id.clone(), user.id);
 
     // Set cookie
     let mut cookie = Cookie::new("session_id", session_id);

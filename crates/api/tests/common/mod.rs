@@ -42,8 +42,7 @@ impl TestApp {
             .unwrap();
 
         if let Some(ref cookies) = self.cookies {
-            req.headers_mut()
-                .insert("Cookie", cookies.parse().unwrap());
+            req.headers_mut().insert("Cookie", cookies.parse().unwrap());
         }
 
         let response = self.app.clone().oneshot(req).await.unwrap();
@@ -59,8 +58,7 @@ impl TestApp {
             .unwrap();
 
         if let Some(ref cookies) = self.cookies {
-            req.headers_mut()
-                .insert("Cookie", cookies.parse().unwrap());
+            req.headers_mut().insert("Cookie", cookies.parse().unwrap());
         }
 
         let response = self.app.clone().oneshot(req).await.unwrap();
@@ -83,8 +81,7 @@ impl TestApp {
             .unwrap();
 
         if let Some(ref cookies) = self.cookies {
-            req.headers_mut()
-                .insert("Cookie", cookies.parse().unwrap());
+            req.headers_mut().insert("Cookie", cookies.parse().unwrap());
         }
 
         let response = self.app.clone().oneshot(req).await.unwrap();
