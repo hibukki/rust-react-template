@@ -10,6 +10,7 @@ db = { path = "../db" }
 
 axum.workspace = true
 tokio.workspace = true
+futures-util.workspace = true
 tower.workspace = true
 tower-http.workspace = true
 serde.workspace = true

@@ -1,6 +1,7 @@
 mod auth;
 mod health;
 mod profiles;
+mod ws;
 
 use axum::Router;
 use tower_cookies::CookieManagerLayer;
@@ -12,6 +13,7 @@ pub fn router(state: AppState) -> Router {
         .merge(health::routes())
         .merge(auth::routes())
         .merge(profiles::routes())
+        .merge(ws::routes())
         .layer(CookieManagerLayer::new())
         .with_state(state)
 }
