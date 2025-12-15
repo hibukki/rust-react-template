@@ -5,4 +5,7 @@ edition.workspace = true
 
 [dependencies]
 shared = { path = "../shared" }
+db = { path = "../db" }
 thiserror.workspace = true
+tokio = { workspace = true, features = ["sync"] }
+sqlx.workspace = true

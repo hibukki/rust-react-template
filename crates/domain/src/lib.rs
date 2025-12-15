@@ -1,1 +1,3 @@
-// Domain logic - pure Rust, no IO
+mod profiles;
+
+pub use profiles::ProfileService;
