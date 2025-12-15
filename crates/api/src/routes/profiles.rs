@@ -1,7 +1,7 @@
 use crate::{error::AppError, state::AppState};
 use axum::{
     extract::{Path, State},
-    routing::get,
+    routing::patch,
     Json, Router,
 };
 use serde::Deserialize;
@@ -9,33 +9,8 @@ use shared::types::Profile;
 use tower_cookies::Cookies;
 
 pub fn routes() -> Router<AppState> {
-    Router::new()
-        .route("/api/profiles", get(list_profiles))
-        .route("/api/profiles/{id}", get(get_profile).patch(update_profile))
-}
-
-async fn list_profiles(State(state): State<AppState>) -> Result<Json<Vec<Profile>>, AppError> {
-    let profiles = state
-        .profile_service
-        .list_profiles()
-        .await
-        .map_err(|e| AppError::Internal(e.into()))?;
-
-    Ok(Json(profiles))
-}
-
-async fn get_profile(
-    State(state): State<AppState>,
-    Path(id): Path<i64>,
-) -> Result<Json<Profile>, AppError> {
-    let profile = state
-        .profile_service
-        .get_profile_by_id(id)
-        .await
-        .map_err(|e| AppError::Internal(e.into()))?
-        .ok_or_else(|| AppError::NotFound("Profile not found".to_string()))?;
-
-    Ok(Json(profile))
+    // Only mutation endpoint - reads come through WebSocket
+    Router::new().route("/api/profiles/{id}", patch(update_profile))
 }
 
 #[derive(Deserialize)]

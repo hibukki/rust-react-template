@@ -94,20 +94,7 @@ export const api = {
   },
 
   profiles: {
-    async list(): Promise<Profile[]> {
-      const response = await fetch(`${API_BASE}/profiles`, {
-        credentials: "include",
-      });
-      return handleResponse(response, (data) => (data as unknown[]).map(parseProfile));
-    },
-
-    async get(id: bigint): Promise<Profile> {
-      const response = await fetch(`${API_BASE}/profiles/${id}`, {
-        credentials: "include",
-      });
-      return handleResponse(response, parseProfile);
-    },
-
+    // Read operations removed - use WebSocket subscription instead
     async update(id: bigint, req: UpdateProfileRequest): Promise<Profile> {
       const response = await fetch(`${API_BASE}/profiles/${id}`, {
         method: "PATCH",
