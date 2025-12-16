@@ -18,6 +18,8 @@ Production-worthy fullstack Rust + React template with:
 - React + Vite + TypeScript
 - Generated types from Rust
 
+See [frontend/README.md](frontend/README.md)
+
 ## Quick Start
 
 ```bash
